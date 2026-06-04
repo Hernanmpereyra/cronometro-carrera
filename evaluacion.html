@@ -22,17 +22,36 @@
         <div class="bg-gray-800 p-4 rounded-xl shadow-lg space-y-3">
             <label class="block text-sm font-medium text-gray-300">Buscar Personal por DNI:</label>
             <div class="flex gap-2">
-                <input type="number" id="input-dni" placeholder="Ej: 34567890" class="flex-grow bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white font-bold focus:outline-none focus:border-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                <input type="number" id="input-dni" placeholder="Ej: 34567890" class="flex-grow bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white font-bold text-lg focus:outline-none focus:border-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
                 <button onclick="buscarPorDNI()" class="bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-bold px-4 py-2 rounded-lg transition-all shadow">
                     🔍 BUSCAR
                 </button>
             </div>
         </div>
 
-        <div id="card-personal" class="hidden bg-gray-800 p-4 rounded-xl shadow-lg border-l-4 border-yellow-500 space-y-1">
-            <div class="text-xs text-gray-400 font-bold uppercase">Personal Identificado:</div>
-            <div id="txt-grado" class="text-sm font-semibold text-yellow-400 uppercase">---</div>
-            <div id="txt-nombre" class="text-lg font-extrabold text-white uppercase tracking-wide">---</div>
+        <div id="card-personal" class="hidden bg-gray-800 p-4 rounded-xl shadow-lg border-l-4 space-y-2">
+            <div id="card-titulo" class="text-xs font-bold uppercase tracking-wider">---</div>
+            
+            <div id="container-datos-fijos">
+                <div id="txt-grado" class="text-sm font-semibold text-yellow-400 uppercase">---</div>
+                <div id="txt-nombre" class="text-lg font-extrabold text-white uppercase tracking-wide">---</div>
+            </div>
+
+            <div id="container-datos-nuevos" class="hidden space-y-2">
+                <div>
+                    <label class="block text-xs text-gray-400 font-bold uppercase">Grado:</label>
+                    <input type="text" id="input-grado-nuevo" class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 uppercase text-sm font-bold text-white focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 font-bold uppercase">Apellido y Nombres:</label>
+                    <input type="text" id="input-nombre-nuevo" class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 uppercase text-sm font-bold text-white focus:outline-none focus:border-blue-500">
+                </div>
+            </div>
+            
+            <div class="pt-1">
+                <label class="block text-xs text-gray-400 font-bold uppercase mb-0.5">Fecha de Nacimiento:</label>
+                <input type="date" id="val-fecha-nac" class="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm text-white font-bold focus:outline-none focus:border-blue-500">
+            </div>
         </div>
 
         <div class="bg-gray-800 p-4 rounded-xl shadow-lg space-y-4">
@@ -62,37 +81,69 @@
 
     <script>
         // ==========================================
-        // PEGÁ ACÁ LA MISMA URL LARGA QUE TERMINA EN /exec
-        const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbxRxzyh0X3XyL9OOD3xqiAMdZWDHHTWS-6Wjl39t2UG_RykH71HbhvgWoD5MpnLDdf-AQ/exec"; 
+        // COLOCÁ ACÁ TU URL DE APPS SCRIPT TERMINADA EN /exec
+        const URL_WEB_APP = "TU_URL_DE_APPS_SCRIPT_AQUI"; 
         // ==========================================
+
+        let currentDni = "";
 
         function buscarPorDNI() {
             const dni = document.getElementById("input-dni").value.trim();
             if(!dni) return alert("Por favor, ingresá un DNI.");
             
-            // Bloqueamos la interfaz mientras busca
-            document.getElementById("card-personal").classList.add("hidden");
+            currentDni = dni;
+            const card = document.getElementById("card-personal");
+            card.classList.add("hidden");
             deshabilitarFormulario();
 
             fetch(`${URL_WEB_APP}?dni=${dni}`)
                 .then(res => res.json())
                 .then(data => {
+                    card.classList.remove("hidden");
+                    
                     if(data.encontrado) {
-                        // Cargar datos del efectivo
+                        // MODO: PERSONAL EXISTENTE (Borde Amarillo)
+                        card.className = "bg-gray-800 p-4 rounded-xl shadow-lg border-l-4 border-yellow-500 space-y-2";
+                        document.getElementById("card-titulo").innerText = "Personal Identificado:";
+                        document.getElementById("card-titulo").className = "text-xs font-bold uppercase tracking-wider text-yellow-500";
+                        
+                        document.getElementById("container-datos-fijos").classList.remove("hidden");
+                        document.getElementById("container-datos-nuevos").classList.add("hidden");
+                        
                         document.getElementById("txt-grado").innerText = data.grado || "SIN GRADO";
                         document.getElementById("txt-nombre").innerText = data.nombre;
                         document.getElementById("guardar-fila").value = data.fila;
                         
-                        // Cargar valores actuales si ya tuviera algo anotado (opcional)
+                        // Cargar valores de pruebas y fecha de nacimiento
+                        document.getElementById("val-fecha-nac").value = data.fechaNac || "";
                         document.getElementById("val-brazos").value = data.brazos !== "" ? data.brazos : "";
                         document.getElementById("val-tronco").value = data.tronco !== "" ? data.tronco : "";
                         document.getElementById("val-barra").value = data.barra !== "" ? data.barra : "";
 
-                        // Mostrar y habilitar controles
-                        document.getElementById("card-personal").classList.remove("hidden");
                         habilitarFormulario();
                     } else {
-                        alert("❌ No se encontró ningún personal registrado con ese DNI.");
+                        // MODO: PERSONAL NUEVO (Borde Azul Celeste)
+                        if(confirm("El DNI no está en la lista. ¿Querés darlo de alta ahora mismo?")) {
+                            card.className = "bg-gray-800 p-4 rounded-xl shadow-lg border-l-4 border-cyan-500 space-y-2";
+                            document.getElementById("card-titulo").innerText = "✨ Registrando Personal Nuevo:";
+                            document.getElementById("card-titulo").className = "text-xs font-bold uppercase tracking-wider text-cyan-400";
+                            
+                            document.getElementById("container-datos-fijos").classList.add("hidden");
+                            document.getElementById("container-datos-nuevos").classList.remove("hidden");
+                            
+                            // Reseteamos inputs para carga manual
+                            document.getElementById("guardar-fila").value = "-1"; // Marcador de registro nuevo
+                            document.getElementById("input-grado-nuevo").value = "";
+                            document.getElementById("input-nombre-nuevo").value = "";
+                            document.getElementById("val-fecha-nac").value = "";
+                            document.getElementById("val-brazos").value = "";
+                            document.getElementById("val-tronco").value = "";
+                            document.getElementById("val-barra").value = "";
+
+                            habilitarFormulario();
+                        } else {
+                            card.classList.add("hidden");
+                        }
                     }
                 })
                 .catch(err => alert("Error al conectar con la base de datos: " + err));
@@ -100,27 +151,45 @@
 
         function guardarDatos() {
             const fila = document.getElementById("guardar-fila").value;
+            const fechaNac = document.getElementById("val-fecha-nac").value;
             const brazos = document.getElementById("val-brazos").value;
             const tronco = document.getElementById("val-tronco").value;
             const barra = document.getElementById("val-barra").value;
             
+            let grado = "";
+            let nombre = "";
+
+            // Validación si es un alta nueva
+            if (fila === "-1") {
+                grado = document.getElementById("input-grado-nuevo").value.trim();
+                nombre = document.getElementById("input-nombre-nuevo").value.trim();
+                if(!grado || !nombre) {
+                    return alert("Para dar de alta, debés completar el Grado y el Nombre obligatoriamente.");
+                }
+            }
+
             const btn = document.getElementById("btn-guardar");
             btn.disabled = true;
-            btn.innerText = "⏳ GUARDANDO EN SHEET...";
+            btn.innerText = "⏳ ACTUALIZANDO PLANILLA...";
 
             fetch(URL_WEB_APP, {
                 method: 'POST',
-                mode: 'no-cors', // Evita problemas de CORS
+                mode: 'no-cors',
                 body: JSON.stringify({
                     accion: "guardar_pafb",
                     fila: fila,
+                    dni: currentDni,
+                    grado: grado,
+                    nombre: nombre,
+                    fechaNac: fechaNac,
                     brazos: brazos,
                     tronco: tronco,
                     barra: barra
                 })
             }).then(() => {
-                alert("💪 ¡Evaluación guardada con éxito en el Google Sheet!");
-                // Limpiar pantalla para el próximo
+                alert(fila === "-1" ? "🎖️ ¡Alta exitosa y resultados guardados al final del Sheet!" : "💪 ¡Evaluación actualizada con éxito!");
+                
+                // Limpiar pantalla
                 document.getElementById("input-dni").value = "";
                 document.getElementById("card-personal").classList.add("hidden");
                 document.getElementById("val-brazos").value = "";
