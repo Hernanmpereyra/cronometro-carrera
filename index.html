@@ -4,10 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cronómetro de Carrera</title>
-    <!-- Usamos Tailwind CSS desde CDN para que tenga un diseño limpio y moderno sin instalar nada -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
-        /* Evita el zoom molesto al hacer doble clic rápido en el celular */
+        /* Evita zooms molestos por doble clic rápido en móviles */
         button { touch-action: manipulation; }
     </style>
 </head>
@@ -15,7 +14,6 @@
 
     <main class="max-w-md mx-auto w-full flex-grow flex flex-col justify-between space-y-6">
         
-        <!-- CABECERA Y CONTROL GLOBAL -->
         <div class="bg-gray-800 p-4 rounded-xl shadow-lg text-center">
             <h1 class="text-xl font-bold mb-3 tracking-wide text-blue-400">CRONÓMETRO DE META</h1>
             
@@ -26,26 +24,22 @@
             <div id="status-inicio" class="mt-2 text-sm text-gray-400 italic">Carrera no iniciada</div>
         </div>
 
-        <!-- BOTÓN PRINCIPAL DE CAPTURA (GIGANTE PARA EL CELULAR) -->
         <div class="flex-grow flex items-center justify-center">
             <button id="btn-llegada" onclick="marcarLlegada()" disabled class="w-full h-64 bg-blue-600 hover:bg-blue-500 active:bg-blue-800 disabled:bg-gray-700 disabled:opacity-50 text-white font-extrabold text-3xl rounded-2xl shadow-2xl transition-all border-4 border-blue-400 active:scale-95 flex items-center justify-center">
                 ⏱️ ¡LLEGADA!
             </button>
         </div>
 
-        <!-- LISTA DE TIEMPOS REGISTRADOS LOCALMENTE -->
         <div class="bg-gray-800 p-4 rounded-xl shadow-lg flex flex-col h-48">
             <div class="flex justify-between items-center mb-2 border-b border-gray-700 pb-1">
                 <span class="font-semibold text-gray-300">Últimos registros (<span id="contador">0</span>)</span>
                 <button onclick="limpiarLocal()" class="text-xs text-red-400 hover:text-red-300">Borrar todo</button>
             </div>
             <div id="lista-tiempos" class="overflow-y-auto flex-grow space-y-1 text-sm font-mono text-gray-300">
-                <!-- Se rellena con JS -->
                 <div class="text-center text-gray-500 italic mt-4">No hay tiempos marcados aún.</div>
             </div>
         </div>
 
-        <!-- BOTÓN DE SINCRONIZACIÓN -->
         <div class="pb-4">
             <button id="btn-sincro" onclick="sincronizarConSheet()" class="w-full bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-gray-900 font-bold py-3 px-4 rounded-lg shadow transition-all flex items-center justify-center gap-2 text-base">
                 🔄 SINCRONIZAR CON GOOGLE SHEET
@@ -54,53 +48,51 @@
 
     </main>
 
-    <!-- LÓGICA DE PROGRAMACIÓN -->
     <script>
-        // === CONFIGURACIÓN ===
-        // PEGÁ ACÁ LA URL LARGA QUE TE DIO GOOGLE APPS SCRIPT AL IMPLEMENTAR COMO WEB APP
+        // ==========================================
+        // COLOCÁ TU URL DE GOOGLE APPS SCRIPT ACÁ ACORDATE QUE CORRESPONDA AL /exec
         const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbyQTT2xMdbNAM7UXr0XWCgTcnCuTOoM_a-sEmGnwZ8B5jS-nxVdHW_IqruA3ZM843bp/exec"; 
+        // ==========================================
 
         let horaInicioLocal = null;
         let tiemposRegistrados = [];
 
-       // 1. INICIAR CRONÓMETRO (Versión corregida a prueba de fallos)
-function iniciarCarrera() {
-    alert("Botón presionado correctamente");
-    if (horaInicioLocal) return;
-    
-    horaInicioLocal = new Date();
-    
-    // Cambiamos la interfaz PRIMERO (así funciona instantáneo en el celular)
-    document.getElementById("status-inicio").innerText = "Corriendo desde: " + horaInicioLocal.toLocaleTimeString();
-    document.getElementById("status-inicio").classList.remove("text-gray-400");
-    document.getElementById("status-inicio").classList.add("text-emerald-400", "font-bold");
-    document.getElementById("btn-inicio").disabled = true;
-    document.getElementById("btn-inicio").classList.add("opacity-50", "cursor-not-allowed");
-    document.getElementById("btn-llegada").disabled = false;
+        function iniciarCarrera() {
+            if (horaInicioLocal) return;
+            
+            horaInicioLocal = new Date();
+            
+            // Cambios visuales instantáneos
+            document.getElementById("status-inicio").innerText = "Corriendo desde: " + horaInicioLocal.toLocaleTimeString();
+            document.getElementById("status-inicio").classList.remove("text-gray-400");
+            document.getElementById("status-inicio").classList.add("text-emerald-400", "font-bold");
+            
+            document.getElementById("btn-inicio").disabled = true;
+            document.getElementById("btn-inicio").classList.add("opacity-50", "cursor-not-allowed");
+            
+            document.getElementById("btn-llegada").disabled = false;
 
-    // Intentamos avisarle a Google en segundo plano. Si falla, no frena la app.
-    try {
-        fetch(URL_WEB_APP, {
-            method: 'POST',
-            mode: 'no-cors',
-            body: JSON.stringify({
-                accion: "iniciar",
-                horaInicio: horaInicioLocal.toISOString()
-            })
-        });
-    } catch(err) {
-        console.log("Aviso a Google diferido: ", err);
-    }
-}
+            // Petición de red asíncrona a Google (No traba el teléfono)
+            try {
+                fetch(URL_WEB_APP, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: JSON.stringify({
+                        accion: "iniciar",
+                        horaInicio: horaInicioLocal.toISOString()
+                    })
+                });
+            } catch(e) {
+                console.log("Error de red diferido: ", e);
+            }
+        }
 
-        // 2. MARCAR LLEGADA (Precisión a milisegundos en el hilo local)
         function marcarLlegada() {
             if (!horaInicioLocal) return;
             
             const horaActual = new Date();
             const diferenciaMs = horaActual - horaInicioLocal;
             
-            // Cálculo y formateo estricto HH:mm:ss
             const totalSegundos = Math.floor(diferenciaMs / 1000);
             const horas = Math.floor(totalSegundos / 3600).toString().padStart(2, '0');
             const minutos = Math.floor((totalSegundos % 3600) / 60).toString().padStart(2, '0');
@@ -108,10 +100,7 @@ function iniciarCarrera() {
             
             const tiempoFormateado = `${horas}:${minutos}:${segundos}`;
             
-            // Agregamos al inicio del array para que el último se vea arriba en la pantalla
             tiemposRegistrados.unshift(tiempoFormateado);
-            
-            // Renderizar la lista en el celular de inmediato (0ms de retraso)
             renderizarListaLocal();
         }
 
@@ -124,7 +113,6 @@ function iniciarCarrera() {
                 return;
             }
             
-            // Reconstruimos el HTML dinámicamente reflejando el orden real de entrada
             contenedor.innerHTML = tiemposRegistrados.map((tiempo, index) => {
                 const nroOrden = tiemposRegistrados.length - index;
                 return `<div class="flex justify-between bg-gray-700 px-3 py-1.5 rounded border-l-4 border-blue-500 font-semibold shadow-sm">
@@ -134,7 +122,6 @@ function iniciarCarrera() {
             }).join('');
         }
 
-        // 3. ENVIAR DATOS EN BLOQUE AL SHEET
         function sincronizarConSheet() {
             if (tiemposRegistrados.length === 0) {
                 alert("Primero debés registrar algunas llegadas.");
@@ -145,7 +132,6 @@ function iniciarCarrera() {
             btn.disabled = true;
             btn.innerText = "⏳ ENVIANDO DATOS...";
 
-            // Pasamos el array al revés para que impacte en el orden cronológico correcto (1, 2, 3...)
             const listaCronologica = [...tiemposRegistrados].reverse();
 
             fetch(URL_WEB_APP, {
@@ -166,7 +152,6 @@ function iniciarCarrera() {
             });
         }
 
-        // Limpieza local de seguridad
         function limpiarLocal() {
             if (confirm("¿Seguro que querés vaciar la lista del celular?")) {
                 tiemposRegistrados = [];
