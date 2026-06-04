@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carga de Planillas PAFB</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>button { touch-action: manipulation; }</style>
+</head>
+<body class="bg-gray-900 text-white font-sans min-h-screen p-4">
+
+    <main class="max-w-md mx-auto w-full space-y-4">
+        
+        <div class="bg-gray-800 p-4 rounded-xl shadow-lg text-center flex flex-col items-center justify-center space-y-2">
+            <img src="logo.png" alt="Logo" class="h-16 w-auto object-contain drop-shadow-md">
+            <div>
+                <h1 class="text-lg font-extrabold tracking-wider text-blue-400 uppercase">INGRESO DE RESULTADOS</h1>
+                <p class="text-xs text-gray-400 font-semibold tracking-widest uppercase">PAFB Habilitación</p>
+            </div>
+        </div>
+
+        <div class="bg-gray-800 p-4 rounded-xl shadow-lg space-y-3">
+            <label class="block text-sm font-medium text-gray-300">Buscar Personal por DNI:</label>
+            <div class="flex gap-2">
+                <input type="number" id="input-dni" placeholder="Ej: 34567890" class="flex-grow bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white font-bold focus:outline-none focus:border-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                <button onclick="buscarPorDNI()" class="bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-bold px-4 py-2 rounded-lg transition-all shadow">
+                    🔍 BUSCAR
+                </button>
+            </div>
+        </div>
+
+        <div id="card-personal" class="hidden bg-gray-800 p-4 rounded-xl shadow-lg border-l-4 border-yellow-500 space-y-1">
+            <div class="text-xs text-gray-400 font-bold uppercase">Personal Identificado:</div>
+            <div id="txt-grado" class="text-sm font-semibold text-yellow-400 uppercase">---</div>
+            <div id="txt-nombre" class="text-lg font-extrabold text-white uppercase tracking-wide">---</div>
+        </div>
+
+        <div class="bg-gray-800 p-4 rounded-xl shadow-lg space-y-4">
+            <input type="hidden" id="guardar-fila">
+            
+            <div>
+                <label class="block text-sm font-bold text-gray-300 mb-1">Flexiones de Brazos:</label>
+                <input type="number" id="val-brazos" disabled class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-3 text-xl text-center font-extrabold text-white focus:outline-none focus:border-emerald-500 disabled:opacity-40">
+            </div>
+
+            <div>
+                <label class="block text-sm font-bold text-gray-300 mb-1">Tronco (Abdominales):</label>
+                <input type="number" id="val-tronco" disabled class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-3 text-xl text-center font-extrabold text-white focus:outline-none focus:border-emerald-500 disabled:opacity-40">
+            </div>
+
+            <div>
+                <label class="block text-sm font-bold text-gray-300 mb-1">Barra:</label>
+                <input type="number" id="val-barra" disabled class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-3 text-xl text-center font-extrabold text-white focus:outline-none focus:border-emerald-500 disabled:opacity-40">
+            </div>
+
+            <button id="btn-guardar" onclick="guardarDatos()" disabled class="w-full bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 disabled:bg-gray-700 disabled:opacity-50 text-white font-extrabold py-3 px-4 rounded-xl shadow-lg transition-all tracking-wide text-base mt-2">
+                💾 GUARDAR EVALUACIÓN
+            </button>
+        </div>
+
+    </main>
+
+    <script>
+        // ==========================================
+        // PEGÁ ACÁ LA MISMA URL LARGA QUE TERMINA EN /exec
+        const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbxRxzyh0X3XyL9OOD3xqiAMdZWDHHTWS-6Wjl39t2UG_RykH71HbhvgWoD5MpnLDdf-AQ/exec"; 
+        // ==========================================
+
+        function buscarPorDNI() {
+            const dni = document.getElementById("input-dni").value.trim();
+            if(!dni) return alert("Por favor, ingresá un DNI.");
+            
+            // Bloqueamos la interfaz mientras busca
+            document.getElementById("card-personal").classList.add("hidden");
+            deshabilitarFormulario();
+
+            fetch(`${URL_WEB_APP}?dni=${dni}`)
+                .then(res => res.json())
+                .then(data => {
+                    if(data.encontrado) {
+                        // Cargar datos del efectivo
+                        document.getElementById("txt-grado").innerText = data.grado || "SIN GRADO";
+                        document.getElementById("txt-nombre").innerText = data.nombre;
+                        document.getElementById("guardar-fila").value = data.fila;
+                        
+                        // Cargar valores actuales si ya tuviera algo anotado (opcional)
+                        document.getElementById("val-brazos").value = data.brazos !== "" ? data.brazos : "";
+                        document.getElementById("val-tronco").value = data.tronco !== "" ? data.tronco : "";
+                        document.getElementById("val-barra").value = data.barra !== "" ? data.barra : "";
+
+                        // Mostrar y habilitar controles
+                        document.getElementById("card-personal").classList.remove("hidden");
+                        habilitarFormulario();
+                    } else {
+                        alert("❌ No se encontró ningún personal registrado con ese DNI.");
+                    }
+                })
+                .catch(err => alert("Error al conectar con la base de datos: " + err));
+        }
+
+        function guardarDatos() {
+            const fila = document.getElementById("guardar-fila").value;
+            const brazos = document.getElementById("val-brazos").value;
+            const tronco = document.getElementById("val-tronco").value;
+            const barra = document.getElementById("val-barra").value;
+            
+            const btn = document.getElementById("btn-guardar");
+            btn.disabled = true;
+            btn.innerText = "⏳ GUARDANDO EN SHEET...";
+
+            fetch(URL_WEB_APP, {
+                method: 'POST',
+                mode: 'no-cors', // Evita problemas de CORS
+                body: JSON.stringify({
+                    accion: "guardar_pafb",
+                    fila: fila,
+                    brazos: brazos,
+                    tronco: tronco,
+                    barra: barra
+                })
+            }).then(() => {
+                alert("💪 ¡Evaluación guardada con éxito en el Google Sheet!");
+                // Limpiar pantalla para el próximo
+                document.getElementById("input-dni").value = "";
+                document.getElementById("card-personal").classList.add("hidden");
+                document.getElementById("val-brazos").value = "";
+                document.getElementById("val-tronco").value = "";
+                document.getElementById("val-barra").value = "";
+                deshabilitarFormulario();
+                btn.innerText = "💾 GUARDAR EVALUACIÓN";
+            }).catch(err => {
+                alert("Error de conexión: " + err);
+                btn.disabled = false;
+                btn.innerText = "💾 GUARDAR EVALUACIÓN";
+            });
+        }
+
+        function habilitarFormulario() {
+            document.getElementById("val-brazos").disabled = false;
+            document.getElementById("val-tronco").disabled = false;
+            document.getElementById("val-barra").disabled = false;
+            document.getElementById("btn-guardar").disabled = false;
+        }
+
+        function deshabilitarFormulario() {
+            document.getElementById("val-brazos").disabled = true;
+            document.getElementById("val-tronco").disabled = true;
+            document.getElementById("val-barra").disabled = true;
+            document.getElementById("btn-guardar").disabled = true;
+        }
+    </script>
+</body>
+</html>
