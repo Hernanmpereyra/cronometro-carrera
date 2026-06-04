@@ -63,30 +63,34 @@
         let horaInicioLocal = null;
         let tiemposRegistrados = [];
 
-        // 1. INICIAR CRONÓMETRO
-        function iniciarCarrera() {
-            if (horaInicioLocal) return;
-            
-            horaInicioLocal = new Date();
-            
-            // Actualizar interfaz
-            document.getElementById("status-inicio").innerText = "Corriendo desde: " + horaInicioLocal.toLocaleTimeString();
-            document.getElementById("status-inicio").classList.remove("text-gray-400");
-            document.getElementById("status-inicio").classList.add("text-emerald-400", "font-bold");
-            document.getElementById("btn-inicio").disabled = true;
-            document.getElementById("btn-inicio").classList.add("opacity-50", "cursor-not-allowed");
-            document.getElementById("btn-llegada").disabled = false;
+       // 1. INICIAR CRONÓMETRO (Versión corregida a prueba de fallos)
+function iniciarCarrera() {
+    if (horaInicioLocal) return;
+    
+    horaInicioLocal = new Date();
+    
+    // Cambiamos la interfaz PRIMERO (así funciona instantáneo en el celular)
+    document.getElementById("status-inicio").innerText = "Corriendo desde: " + horaInicioLocal.toLocaleTimeString();
+    document.getElementById("status-inicio").classList.remove("text-gray-400");
+    document.getElementById("status-inicio").classList.add("text-emerald-400", "font-bold");
+    document.getElementById("btn-inicio").disabled = true;
+    document.getElementById("btn-inicio").classList.add("opacity-50", "cursor-not-allowed");
+    document.getElementById("btn-llegada").disabled = false;
 
-            // Enviar señal al Sheet en segundo plano (F1)
-            fetch(URL_WEB_APP, {
-                method: 'POST',
-                mode: 'no-cors',
-                body: JSON.stringify({
-                    accion: "iniciar",
-                    horaInicio: horaInicioLocal.toISOString()
-                })
-            });
-        }
+    // Intentamos avisarle a Google en segundo plano. Si falla, no frena la app.
+    try {
+        fetch(URL_WEB_APP, {
+            method: 'POST',
+            mode: 'no-cors',
+            body: JSON.stringify({
+                accion: "iniciar",
+                horaInicio: horaInicioLocal.toISOString()
+            })
+        });
+    } catch(err) {
+        console.log("Aviso a Google diferido: ", err);
+    }
+}
 
         // 2. MARCAR LLEGADA (Precisión a milisegundos en el hilo local)
         function marcarLlegada() {
