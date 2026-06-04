@@ -30,6 +30,14 @@
             <hr class="w-full border-gray-700 my-1">
             
             <button id="btn-inicio" onclick="iniciarCarrera()" class="w-full bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold py-3 px-4 rounded-lg shadow transition-all text-base tracking-wide">
+                🚀 INICIAR LARGADA
+            </button>
+            
+            <div id="status-inicio" class="text-sm text-gray-400 italic">Carrera no iniciada</div>
+        </div>
+
+        <div class="flex-grow flex items-center justify-center">
+            <button id="btn-llegada" onclick="marcarLlegada()" disabled class="w-full h-64 bg-blue-600 hover:bg-blue-500 active:bg-blue-800 disabled:bg-gray-700 disabled:opacity-50 text-white font-extrabold text-3xl rounded-2xl shadow-2xl transition-all border-4 border-blue-400 active:scale-95 flex items-center justify-center">
                 ⏱️ ¡LLEGADA!
             </button>
         </div>
@@ -54,8 +62,8 @@
 
     <script>
         // ==========================================
-        // COLOCÁ TU URL DE GOOGLE APPS SCRIPT ACÁ ACORDATE QUE CORRESPONDA AL /exec
-        const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbyQTT2xMdbNAM7UXr0XWCgTcnCuTOoM_a-sEmGnwZ8B5jS-nxVdHW_IqruA3ZM843bp/exec"; 
+        // VOLVÉ A PEGAR TU URL DE GOOGLE APPS SCRIPT ACÁ (LA QUE TERMINA EN /exec)
+        const URL_WEB_APP = "TU_URL_DE_APPS_SCRIPT_AQUI"; 
         // ==========================================
 
         let horaInicioLocal = null;
@@ -66,7 +74,6 @@
             
             horaInicioLocal = new Date();
             
-            // Cambios visuales instantáneos
             document.getElementById("status-inicio").innerText = "Corriendo desde: " + horaInicioLocal.toLocaleTimeString();
             document.getElementById("status-inicio").classList.remove("text-gray-400");
             document.getElementById("status-inicio").classList.add("text-emerald-400", "font-bold");
@@ -76,7 +83,6 @@
             
             document.getElementById("btn-llegada").disabled = false;
 
-            // Petición de red asíncrona a Google (No traba el teléfono)
             try {
                 fetch(URL_WEB_APP, {
                     method: 'POST',
@@ -99,10 +105,10 @@
             
             const totalSegundos = Math.floor(diferenciaMs / 1000);
             const horas = Math.floor(totalSegundos / 3600).toString().padStart(2, '0');
-            const minutos = Math.floor((totalSegundos % 3600) / 60).toString().padStart(2, '0');
+            const minutes = Math.floor((totalSegundos % 3600) / 60).toString().padStart(2, '0');
             const segundos = (totalSegundos % 60).toString().padStart(2, '0');
             
-            const tiempoFormateado = `${horas}:${minutos}:${segundos}`;
+            const tiempoFormateado = `${horas}:${minutes}:${segundos}`;
             
             tiemposRegistrados.unshift(tiempoFormateado);
             renderizarListaLocal();
