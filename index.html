@@ -12,20 +12,24 @@
 </head>
 <body class="bg-gray-900 text-white font-sans min-h-screen flex flex-col p-4">
 
-    <main class="max-w-md mx-auto w-full flex-grow flex flex-col justify-between space-y-6">
+    <main class="max-w-md mx-auto w-full flex-grow flex flex-col justify-between space-y-4">
         
-        <div class="bg-gray-800 p-4 rounded-xl shadow-lg text-center">
-            <h1 class="text-xl font-bold mb-3 tracking-wide text-blue-400">CRONÓMETRO DE META</h1>
+        <div class="bg-gray-800 p-4 rounded-xl shadow-lg text-center flex flex-col items-center justify-center space-y-3">
             
-            <button id="btn-inicio" onclick="iniciarCarrera()" class="w-full bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold py-3 px-4 rounded-lg shadow transition-all text-base">
-                🚀 INICIAR LARGADA
-            </button>
+            <img src="logo.png" alt="Logo Institucional" class="h-20 w-auto object-contain drop-shadow-md">
             
-            <div id="status-inicio" class="mt-2 text-sm text-gray-400 italic">Carrera no iniciada</div>
-        </div>
+            <div>
+                <h1 class="text-xl font-extrabold tracking-wider text-blue-400 uppercase">
+                    Evaluación Física
+                </h1>
+                <p class="text-xs text-gray-400 font-semibold tracking-widest uppercase mt-0.5">
+                    Control de Tiempos
+                </p>
+            </div>
 
-        <div class="flex-grow flex items-center justify-center">
-            <button id="btn-llegada" onclick="marcarLlegada()" disabled class="w-full h-64 bg-blue-600 hover:bg-blue-500 active:bg-blue-800 disabled:bg-gray-700 disabled:opacity-50 text-white font-extrabold text-3xl rounded-2xl shadow-2xl transition-all border-4 border-blue-400 active:scale-95 flex items-center justify-center">
+            <hr class="w-full border-gray-700 my-1">
+            
+            <button id="btn-inicio" onclick="iniciarCarrera()" class="w-full bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold py-3 px-4 rounded-lg shadow transition-all text-base tracking-wide">
                 ⏱️ ¡LLEGADA!
             </button>
         </div>
