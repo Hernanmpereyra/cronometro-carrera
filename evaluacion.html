@@ -33,14 +33,27 @@
             <div id="card-titulo" class="text-xs font-bold uppercase tracking-wider">---</div>
             
             <div id="container-datos-fijos">
-                <div id="txt-grado" class="text-sm font-semibold text-yellow-400 uppercase">---</div>
-                <div id="txt-nombre" class="text-lg font-extrabold text-white uppercase tracking-wide">---</div>
+                <div class="flex gap-2 text-sm font-semibold text-yellow-400 uppercase">
+                    <span id="txt-destino" class="bg-gray-700 px-2 py-0.5 rounded text-xs text-gray-300">---</span>
+                    <span id="txt-grado">---</span>
+                </div>
+                <div id="txt-nombre" class="text-lg font-extrabold text-white uppercase tracking-wide mt-1">---</div>
             </div>
 
             <div id="container-datos-nuevos" class="hidden space-y-2">
                 <div>
-                    <label class="block text-xs text-gray-400 font-bold uppercase">Grado:</label>
-                    <input type="text" id="input-grado-nuevo" class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 uppercase text-sm font-bold text-white focus:outline-none focus:border-blue-500">
+                    <label class="block text-xs text-gray-400 font-bold uppercase">Destino / Unidad:</label>
+                    <input type="text" id="input-destino-nuevo" class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 uppercase text-sm font-bold text-white focus:outline-none focus:border-blue-500">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs text-gray-400 font-bold uppercase">Grado:</label>
+                        <input type="text" id="input-grado-nuevo" class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 uppercase text-sm font-bold text-white focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 font-bold uppercase">DNI:</label>
+                        <input type="text" id="input-dni-nuevo" disabled class="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm font-bold text-gray-400 focus:outline-none">
+                    </div>
                 </div>
                 <div>
                     <label class="block text-xs text-gray-400 font-bold uppercase">Apellido y Nombres:</label>
@@ -110,11 +123,11 @@
                         document.getElementById("container-datos-fijos").classList.remove("hidden");
                         document.getElementById("container-datos-nuevos").classList.add("hidden");
                         
+                        document.getElementById("txt-destino").innerText = data.destino || "SIN DESTINO";
                         document.getElementById("txt-grado").innerText = data.grado || "SIN GRADO";
                         document.getElementById("txt-nombre").innerText = data.nombre;
                         document.getElementById("guardar-fila").value = data.fila;
                         
-                        // Cargar valores de pruebas y fecha de nacimiento
                         document.getElementById("val-fecha-nac").value = data.fechaNac || "";
                         document.getElementById("val-brazos").value = data.brazos !== "" ? data.brazos : "";
                         document.getElementById("val-tronco").value = data.tronco !== "" ? data.tronco : "";
@@ -131,9 +144,10 @@
                             document.getElementById("container-datos-fijos").classList.add("hidden");
                             document.getElementById("container-datos-nuevos").classList.remove("hidden");
                             
-                            // Reseteamos inputs para carga manual
-                            document.getElementById("guardar-fila").value = "-1"; // Marcador de registro nuevo
+                            document.getElementById("guardar-fila").value = "-1"; 
+                            document.getElementById("input-destino-nuevo").value = "";
                             document.getElementById("input-grado-nuevo").value = "";
+                            document.getElementById("input-dni-nuevo").value = currentDni; // Muestra el DNI buscado
                             document.getElementById("input-nombre-nuevo").value = "";
                             document.getElementById("val-fecha-nac").value = "";
                             document.getElementById("val-brazos").value = "";
@@ -156,15 +170,16 @@
             const tronco = document.getElementById("val-tronco").value;
             const barra = document.getElementById("val-barra").value;
             
+            let destino = "";
             let grado = "";
             let nombre = "";
 
-            // Validación si es un alta nueva
             if (fila === "-1") {
+                destino = document.getElementById("input-destino-nuevo").value.trim();
                 grado = document.getElementById("input-grado-nuevo").value.trim();
                 nombre = document.getElementById("input-nombre-nuevo").value.trim();
-                if(!grado || !nombre) {
-                    return alert("Para dar de alta, debés completar el Grado y el Nombre obligatoriamente.");
+                if(!destino || !grado || !nombre) {
+                    return alert("Para dar de alta, debés completar el Destino, Grado y Nombre obligatoriamente.");
                 }
             }
 
@@ -176,9 +191,11 @@
                 method: 'POST',
                 mode: 'no-cors',
                 body: JSON.stringify({
+                    accion: "guardb_pafb", // etiqueta de control interno
                     accion: "guardar_pafb",
                     fila: fila,
                     dni: currentDni,
+                    destino: destino,
                     grado: grado,
                     nombre: nombre,
                     fechaNac: fechaNac,
@@ -187,9 +204,8 @@
                     barra: barra
                 })
             }).then(() => {
-                alert(fila === "-1" ? "🎖️ ¡Alta exitosa y resultados guardados al final del Sheet!" : "💪 ¡Evaluación actualizada con éxito!");
+                alert(fila === "-1" ? "🎖️ ¡Alta exitosa en el destino y resultados guardados!" : "💪 ¡Evaluación actualizada con éxito!");
                 
-                // Limpiar pantalla
                 document.getElementById("input-dni").value = "";
                 document.getElementById("card-personal").classList.add("hidden");
                 document.getElementById("val-brazos").value = "";
